@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio Sicoob - Alta Floresta</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #003641; /* Cor de fundo */
+            color: #ffffff; /* Cor do texto */
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: #49479D; /* Cor de fundo do container */
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #FFFFFF; /* Cor do título */
+            margin-bottom: 30px;
+        }
+        .file-upload {
+            display: inline-block;
+            background-color: #00AE9D; /* Cor do botão Carregar Planilha */
+            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .file-upload:hover {
+            background-color: #7DB61C; /* Cor de hover do botão Carregar Planilha */
+        }
+        .button {
+            background-color: #C9D200; /* Cor do botão Iniciar Sorteio */
+            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+        }
+        .button:hover {
+            background-color: #7DB61C; /* Cor de hover do botão Iniciar Sorteio */
+        }
+        #nomes {
+            font-size: 2em;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #7DB61C; /* Cor de fundo do espaço de nomes */
+            border: 2px solid #C9D200; /* Cor da borda do espaço de nomes */
+            border-radius: 6px;
+            min-height: 50px;
+            line-height: 50px;
+        }
+        .animating {
+            animation: shuffle 0.1s infinite alternate;
+        }
+        @keyframes shuffle {
+            0% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(-5px);
+            }
+        }
+        #winner {
+            font-size: 2em;
+            margin-top: 20px;
+            color: #C9D200; /* Cor do texto do vencedor */
+        }
+        #winner-details {
+            margin-top: 20px;
+            font-size: 1.2em;
+            text-align: left;
+            padding: 10px;
+            background-color: #49479D; /* Cor de fundo dos detalhes do vencedor */
+            border: 1px solid #00AE9D; /* Cor da borda dos detalhes do vencedor */
+            border-radius: 6px;
+            display: none; /* Oculta inicialmente */
+        }
+        #loader {
+            font-size: 1.5em;
+            color: #ffffff; /* Cor do texto do loader */
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sorteio Sicoob - Alta Floresta</h1>
+        <label for="fileInput" class="file-upload">Carregar Planilha</label>
+        <input type="file" id="fileInput" accept=".csv">
+        <button class="button" onclick="startSorteio()">Iniciar Sorteio</button>
+        <div id="loader"></div>
+        <div id="nomes"></div>
+        <div id="winner"></div>
+        <div id="winner-details"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        let data = [];
+        let animating = false;
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            Papa.parse(file, {
+                header: true,
+                complete: function(results) {
+                    data = results.data;
+                }
+            });
+        });
+
+        async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function startSorteio() {
+            if (data.length === 0) {
+                alert("Por favor, carregue a planilha primeiro!");
+                return;
+            }
+            const loader = document.getElementById('loader');
+            const nomesDiv = document.getElementById('nomes');
+            const winnerDiv = document.getElementById('winner');
+            const winnerDetailsDiv = document.getElementById('winner-details');
+            loader.textContent = '';
+            nomesDiv.textContent = '';
+            winnerDiv.textContent = '';
+            winnerDetailsDiv.style.display = 'none'; // Oculta os detalhes do vencedor
+
+            const animationSpeed = 100; // Velocidade da animação em milissegundos
+
+            // Início da animação de sorteio
+            animating = true;
+            for (let i = 0; i < 50; i++) { // Número de iterações da animação
+                if (!animating) break; // Verifica se deve continuar a animação
+                const sorteado = data[Math.floor(Math.random() * data.length)];
+                nomesDiv.textContent = sorteado.Nome;
+                nomesDiv.classList.add('animating'); // Adiciona classe para iniciar animação
+                await sleep(animationSpeed);
+                nomesDiv.classList.remove('animating'); // Remove classe para parar animação
+            }
+
+            if (!animating) return; // Verifica se a animação foi interrompida
+
+            // Sorteio final
+            const winner = data[Math.floor(Math.random() * data.length)];
+            nomesDiv.textContent = '';
+            winnerDiv.textContent = `Vencedor: ${winner.Nome}`;
+            winnerDetailsDiv.innerHTML = `
+                <p><strong>Nome:</strong> ${winner.Nome}</p>
+                <p><strong>Telefone:</strong> ${winner.Telefone}</p>
+                <p><strong>Número Da Sorte:</strong> ${winner['Numero Da Sorte']}</p>
+            `;
+            winnerDetailsDiv.style.display = 'block'; // Exibe os detalhes do vencedor
+        }
+
+        // Função para parar o sorteio
+        function stopSorteio() {
+            animating = false; // Define que a animação deve parar
+        }
+    </script>
+</body>
+</html>
